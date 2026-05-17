@@ -11,6 +11,9 @@ import AddExercise from './pages/AddExercise'
 import DevMailbox from './pages/DevMailbox'
 import Alumnos from './pages/Alumnos'
 import Mediciones from './pages/Mediciones'
+import ChangePassword from './pages/ChangePassword'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 function PrivateRoute({ children, profesorOnly = false }) {
   const { user } = useAuth()
@@ -37,6 +40,9 @@ function AppLayout() {
           <Route path="/routines/:routineId/days/:dayId/add-exercise" element={<PrivateRoute profesorOnly><AddExercise /></PrivateRoute>} />
           <Route path="/alumnos" element={<PrivateRoute profesorOnly><Alumnos /></PrivateRoute>} />
           <Route path="/alumnos/:id/mediciones" element={<PrivateRoute profesorOnly><Mediciones /></PrivateRoute>} />
+          <Route path="/change-password" element={<PrivateRoute><ChangePassword /></PrivateRoute>} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

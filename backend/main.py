@@ -9,7 +9,8 @@ from database import get_db, User, Routine, Day, Exercise, WeekSet, BodyMeasurem
 from auth import (verify_password, get_password_hash, create_access_token,
                   get_current_user, require_profesor)
 from email_service import (send_verification_email, send_welcome_email,
-                           send_profesor_welcome_email, generate_password)
+                           send_profesor_welcome_email, send_reset_password_email,
+                           generate_password)
 from seed import seed
 
 app = FastAPI(title="TDC Gym API", version="2.0.0")
@@ -91,6 +92,17 @@ class CreateProfesorRequest(BaseModel):
 
 class VerifyEmailRequest(BaseModel):
     token: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 class BodyMeasurementSchema(BaseModel):
     id: int; user_id: int; fecha: str
@@ -211,6 +223,49 @@ def create_profesor(body: CreateProfesorRequest, db: Session = Depends(get_db),
     send_profesor_welcome_email(body.email, profesor.name, password)
 
     return profesor
+
+
+@app.post("/auth/change-password")
+def change_password(body: ChangePasswordRequest, db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    if not verify_password(body.current_password, current_user.hashed_password):
+        raise HTTPException(400, "La contraseña actual es incorrecta")
+    if len(body.new_password) < 6:
+        raise HTTPException(400, "La nueva contraseña debe tener al menos 6 caracteres")
+    current_user.hashed_password = get_password_hash(body.new_password)
+    db.commit()
+    return {"message": "Contraseña actualizada correctamente"}
+
+
+@app.post("/auth/forgot-password")
+def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(
+        (User.email == body.email) | (User.tdc_email == body.email)
+    ).first()
+    # Siempre responde igual para no revelar si existe el usuario
+    if not user or not user.is_active:
+        return {"message": "Si el email existe, recibirás un link para restablecer tu contraseña."}
+    token = secrets.token_urlsafe(32)
+    user.verification_token = f"reset_{token}"
+    db.commit()
+    reset_url = f"{BASE_URL}/reset-password?token=reset_{token}"
+    send_reset_password_email(user.email, user.name, reset_url)
+    return {"message": "Si el email existe, recibirás un link para restablecer tu contraseña."}
+
+
+@app.post("/auth/reset-password")
+def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    if not body.token.startswith("reset_"):
+        raise HTTPException(400, "Token inválido")
+    user = db.query(User).filter(User.verification_token == body.token).first()
+    if not user:
+        raise HTTPException(400, "El link expiró o ya fue usado")
+    if len(body.new_password) < 6:
+        raise HTTPException(400, "La contraseña debe tener al menos 6 caracteres")
+    user.hashed_password = get_password_hash(body.new_password)
+    user.verification_token = None
+    db.commit()
+    return {"message": "Contraseña restablecida correctamente. Ya podés iniciar sesión."}
 
 
 @app.post("/auth/login", response_model=TokenResponse)

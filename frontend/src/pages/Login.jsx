@@ -82,9 +82,16 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="login-register-link">
-            <span className="muted small">¿Sos nuevo en TDC?</span>
-            <a href="/tdc-gym/register" className="gold-text small" style={{fontFamily:'var(--font-cond)',fontWeight:600,letterSpacing:'0.05em'}}>Crear cuenta</a>
+          <div className="login-register-link" style={{flexDirection:'column',gap:8}}>
+            <div style={{display:'flex',justifyContent:'center',gap:8}}>
+              <span className="muted small">¿Sos nuevo en TDC?</span>
+              <a href="/tdc-gym/register" className="gold-text small" style={{fontFamily:'var(--font-cond)',fontWeight:600,letterSpacing:'0.05em'}}>Crear cuenta</a>
+            </div>
+            <div style={{display:'flex',justifyContent:'center'}}>
+              <a href="/tdc-gym/forgot-password" className="muted small" style={{textDecoration:'underline',cursor:'pointer'}}>
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
           </div>
         </form>
       </div>

@@ -32,6 +32,9 @@ export default function Navbar() {
               </span>
               <span className="user-name">{user.name}</span>
             </div>
+            <button className="btn-ghost" style={{fontSize:13}} onClick={() => navigate('/change-password')}>
+              Cambiar contraseña
+            </button>
             <button className="btn-ghost" onClick={handleLogout}>Salir</button>
           </>
         )}
