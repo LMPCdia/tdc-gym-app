@@ -6,7 +6,7 @@ import './Register.css'
 
 export default function Register() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', dni: '', email: '' })
+  const [form, setForm] = useState({ apellido: '', nombre: '', dni: '', email: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -22,6 +22,15 @@ export default function Register() {
     } catch (e) {
       setError(e.response?.data?.detail || 'Error al registrarse')
     } finally { setLoading(false) }
+  }
+
+  const tdcPreview = () => {
+    if (!form.apellido || !form.nombre || form.dni.length < 4) return null
+    const ap = form.apellido.toLowerCase().replace(/\s/g, '')
+    const ini = form.nombre[0].toLowerCase()
+    const d = form.dni.replace(/\D/g, '')
+    if (d.length < 4) return null
+    return `${ap}${ini}${d.slice(0,2)}${d.slice(-2)}@tdc.com`
   }
 
   return (
@@ -42,20 +51,25 @@ export default function Register() {
             <p className="muted small">Chequeá también la carpeta de spam.</p>
             <div className="success-actions">
               <button className="btn-gold" onClick={() => navigate('/')}>Ir al login</button>
-              <button className="btn-ghost" onClick={() => navigate('/dev/mailbox')}>
-                Ver buzón de prueba →
-              </button>
             </div>
           </div>
         ) : (
           <form className="login-form" onSubmit={handleSubmit}>
             <h2 className="login-title">Crear cuenta</h2>
 
-            <div className="form-group">
-              <label className="form-label">Nombre completo</label>
-              <input className="input-field" value={form.name}
-                onChange={e => update('name', e.target.value)}
-                required placeholder="Ej: Juan Pérez" autoFocus />
+            <div className="form-row" style={{display:'flex',gap:12}}>
+              <div className="form-group" style={{flex:1}}>
+                <label className="form-label">Apellido</label>
+                <input className="input-field" value={form.apellido}
+                  onChange={e => update('apellido', e.target.value)}
+                  required placeholder="Ej: Morel Penco" autoFocus />
+              </div>
+              <div className="form-group" style={{flex:1}}>
+                <label className="form-label">Nombre</label>
+                <input className="input-field" value={form.nombre}
+                  onChange={e => update('nombre', e.target.value)}
+                  required placeholder="Ej: Lautaro" />
+              </div>
             </div>
 
             <div className="form-group">
@@ -64,7 +78,11 @@ export default function Register() {
                 onChange={e => update('dni', e.target.value.replace(/\D/g, ''))}
                 required placeholder="Sin puntos ni guiones" maxLength={9}
                 inputMode="numeric" />
-              <span className="field-hint">Tu DNI será tu ID único en el sistema</span>
+              {tdcPreview() && (
+                <span className="field-hint">
+                  Tu usuario TDC será: <strong style={{color:'var(--gold)'}}>{tdcPreview()}</strong>
+                </span>
+              )}
             </div>
 
             <div className="form-group">

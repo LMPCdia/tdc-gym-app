@@ -11,6 +11,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
 
+  // Crear profesor modal
+  const [showProfeForm, setShowProfeForm] = useState(false)
+  const [profeForm, setProfeForm] = useState({ nombre_completo: '', email: '' })
+  const [profeLoading, setProfeLoading] = useState(false)
+  const [profeError, setProfeError] = useState('')
+  const [profeSuccess, setProfeSuccess] = useState('')
+
   const fetchRoutines = async () => {
     setLoading(true)
     try {
@@ -39,6 +46,20 @@ export default function Dashboard() {
     }
   }
 
+  const handleCrearProfesor = async (e) => {
+    e.preventDefault()
+    setProfeError(''); setProfeLoading(true); setProfeSuccess('')
+    try {
+      const { data } = await api.post('/auth/create-profesor', profeForm)
+      setProfeSuccess(`Profesor ${data.name} creado. Se envió el email con credenciales a ${data.email}.`)
+      setProfeForm({ nombre_completo: '', email: '' })
+    } catch (err) {
+      setProfeError(err.response?.data?.detail || 'Error al crear profesor')
+    } finally {
+      setProfeLoading(false)
+    }
+  }
+
   return (
     <div className="dashboard fade-in">
       <div className="dashboard-header">
@@ -49,11 +70,65 @@ export default function Dashboard() {
           <p className="muted small">{routines.length} rutina{routines.length !== 1 ? 's' : ''} encontrada{routines.length !== 1 ? 's' : ''}</p>
         </div>
         {user?.role === 'profesor' && (
-          <button className="btn-gold" onClick={() => navigate('/routines/new')}>
-            + Nueva rutina
-          </button>
+          <div style={{display:'flex',gap:10}}>
+            <button className="btn-outline" onClick={() => navigate('/alumnos')}>
+              Alumnos
+            </button>
+            <button className="btn-gold" onClick={() => navigate('/routines/new')}>
+              + Nueva rutina
+            </button>
+          </div>
         )}
       </div>
+
+      {/* Panel Crear Profesor — solo visible para profesores */}
+      {user?.role === 'profesor' && (
+        <div className="card" style={{marginBottom:24,padding:'16px 20px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <span style={{fontWeight:600,fontSize:14,color:'var(--gold)'}}>Gestión de profesores</span>
+            <button
+              className="btn-ghost"
+              style={{fontSize:13}}
+              onClick={() => { setShowProfeForm(v => !v); setProfeError(''); setProfeSuccess('') }}
+            >
+              {showProfeForm ? 'Cerrar' : '+ Agregar profesor'}
+            </button>
+          </div>
+
+          {showProfeForm && (
+            <form onSubmit={handleCrearProfesor} style={{marginTop:16}}>
+              <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+                <div className="form-group" style={{flex:1,minWidth:160}}>
+                  <label className="form-label">Nombre completo</label>
+                  <input
+                    className="input-field"
+                    value={profeForm.nombre_completo}
+                    onChange={e => setProfeForm(p => ({...p, nombre_completo: e.target.value}))}
+                    required placeholder="Ej: Carlos García"
+                  />
+                </div>
+                <div className="form-group" style={{flex:1,minWidth:160}}>
+                  <label className="form-label">Email</label>
+                  <input
+                    className="input-field"
+                    type="email"
+                    value={profeForm.email}
+                    onChange={e => setProfeForm(p => ({...p, email: e.target.value}))}
+                    required placeholder="profe@email.com"
+                  />
+                </div>
+                <div style={{display:'flex',alignItems:'flex-end',paddingBottom:1}}>
+                  <button type="submit" className="btn-gold" disabled={profeLoading} style={{height:42}}>
+                    {profeLoading ? <span className="spinner"/> : 'Crear'}
+                  </button>
+                </div>
+              </div>
+              {profeError && <div className="login-error" style={{marginTop:8}}>{profeError}</div>}
+              {profeSuccess && <div style={{marginTop:8,color:'#4ade80',fontSize:13}}>{profeSuccess}</div>}
+            </form>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="loading-center">

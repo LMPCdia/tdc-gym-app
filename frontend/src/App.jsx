@@ -9,6 +9,8 @@ import RoutineDetail from './pages/RoutineDetail'
 import RoutineForm from './pages/RoutineForm'
 import AddExercise from './pages/AddExercise'
 import DevMailbox from './pages/DevMailbox'
+import Alumnos from './pages/Alumnos'
+import Mediciones from './pages/Mediciones'
 
 function PrivateRoute({ children, profesorOnly = false }) {
   const { user } = useAuth()
@@ -33,6 +35,8 @@ function AppLayout() {
           <Route path="/routines/:id" element={<PrivateRoute><RoutineDetail /></PrivateRoute>} />
           <Route path="/routines/:id/edit" element={<PrivateRoute profesorOnly><RoutineForm /></PrivateRoute>} />
           <Route path="/routines/:routineId/days/:dayId/add-exercise" element={<PrivateRoute profesorOnly><AddExercise /></PrivateRoute>} />
+          <Route path="/alumnos" element={<PrivateRoute profesorOnly><Alumnos /></PrivateRoute>} />
+          <Route path="/alumnos/:id/mediciones" element={<PrivateRoute profesorOnly><Mediciones /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
