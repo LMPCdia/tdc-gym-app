@@ -40,6 +40,7 @@ function AppLayout() {
           <Route path="/routines/:routineId/days/:dayId/add-exercise" element={<PrivateRoute profesorOnly><AddExercise /></PrivateRoute>} />
           <Route path="/alumnos" element={<PrivateRoute profesorOnly><Alumnos /></PrivateRoute>} />
           <Route path="/alumnos/:id/mediciones" element={<PrivateRoute profesorOnly><Mediciones /></PrivateRoute>} />
+          <Route path="/mis-mediciones" element={<PrivateRoute><Mediciones /></PrivateRoute>} />
           <Route path="/change-password" element={<PrivateRoute><ChangePassword /></PrivateRoute>} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

@@ -69,7 +69,7 @@ export default function Dashboard() {
           </h1>
           <p className="muted small">{routines.length} rutina{routines.length !== 1 ? 's' : ''} encontrada{routines.length !== 1 ? 's' : ''}</p>
         </div>
-        {user?.role === 'profesor' && (
+        {user?.role === 'profesor' ? (
           <div style={{display:'flex',gap:10}}>
             <button className="btn-outline" onClick={() => navigate('/alumnos')}>
               Alumnos
@@ -78,6 +78,10 @@ export default function Dashboard() {
               + Nueva rutina
             </button>
           </div>
+        ) : (
+          <button className="btn-outline" onClick={() => navigate('/mis-mediciones')}>
+            📊 Mis mediciones
+          </button>
         )}
       </div>
 
