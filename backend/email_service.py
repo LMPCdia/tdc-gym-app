@@ -35,7 +35,6 @@ def send_email(to: str, subject: str, html_body: str, text_body: str = ""):
         print(f"[EMAIL ENVIADO] → {to} | {subject}")
     except Exception as e:
         print(f"[EMAIL ERROR] {e}")
-        raise
 
 
 def generate_password(length=10):
@@ -118,6 +117,39 @@ TDC Gym & Fitness
     </div>
   </div>
   <p style="color:#666;font-size:12px;text-align:center;">Te recomendamos guardar estas credenciales en un lugar seguro.</p>
+</div>
+"""
+    return send_email(email, subject, html, text)
+
+
+def send_reset_password_email(email: str, nombre: str, reset_url: str):
+    subject = "TDC Gym - Restablecer contraseña"
+    text = f"""Hola {nombre}!
+
+Recibimos una solicitud para restablecer tu contraseña.
+
+Ingresá al siguiente link para crear una nueva contraseña:
+{reset_url}
+
+Este link expira en 1 hora. Si no solicitaste esto, ignorá este email.
+
+Saludos,
+TDC Gym & Fitness
+"""
+    html = f"""
+<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;background:#0a0a0a;color:#fff;padding:32px;border-radius:12px;">
+  <div style="text-align:center;margin-bottom:24px;">
+    <div style="display:inline-block;background:#F0A500;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);width:64px;height:64px;line-height:64px;font-size:22px;font-weight:bold;color:#000;">TDC</div>
+    <h2 style="color:#F0A500;margin:12px 0 4px;letter-spacing:2px;">TIEMPO DE CAMBIO</h2>
+    <p style="color:#888;margin:0;font-size:12px;letter-spacing:3px;">GYM & FITNESS</p>
+  </div>
+  <h3 style="color:#fff;">Hola, {nombre}! 🔐</h3>
+  <p style="color:#aaa;">Recibimos una solicitud para restablecer tu contraseña. Hacé clic en el botón:</p>
+  <div style="text-align:center;margin:28px 0;">
+    <a href="{reset_url}" style="background:#F0A500;color:#000;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:bold;font-size:15px;letter-spacing:1px;">RESTABLECER CONTRASEÑA</a>
+  </div>
+  <p style="color:#666;font-size:12px;">O copiá este link:<br><span style="color:#F0A500;">{reset_url}</span></p>
+  <p style="color:#666;font-size:12px;">Este link expira en <strong>1 hora</strong>. Si no solicitaste esto, podés ignorar este email.</p>
 </div>
 """
     return send_email(email, subject, html, text)

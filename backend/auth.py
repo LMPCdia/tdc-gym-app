@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
@@ -11,7 +12,26 @@ SECRET_KEY = "tdc-gym-secret-key-change-in-production-2024"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
-pwd_context = CryptContext(schemes=["bcrypt", "sha256_crypt"], deprecated="auto")
+# bcrypt con 12 rondas — más lento para ataques de fuerza bruta contra la DB
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto",
+                           bcrypt__rounds=12)
+
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_MINUTES = 15
+
+
+def validate_password(password: str) -> list:
+    """Devuelve lista de requisitos no cumplidos. Vacía = válida."""
+    errors = []
+    if len(password) < 8:
+        errors.append("Mínimo 8 caracteres")
+    if not re.search(r'[A-Z]', password):
+        errors.append("Al menos 1 letra mayúscula")
+    if not re.search(r'[0-9]', password):
+        errors.append("Al menos 1 número")
+    if not re.search(r'[!@#$%^&*()\-_+=\[\]{};:\'\",./<>?]', password):
+        errors.append("Al menos 1 símbolo especial (!@#$%...)")
+    return errors
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
