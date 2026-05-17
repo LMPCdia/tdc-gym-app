@@ -35,7 +35,6 @@ def send_email(to: str, subject: str, html_body: str, text_body: str = ""):
         print(f"[EMAIL ENVIADO] → {to} | {subject}")
     except Exception as e:
         print(f"[EMAIL ERROR] {e}")
-        raise
 
 
 def generate_password(length=10):
