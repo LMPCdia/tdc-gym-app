@@ -1,8 +1,10 @@
 .mediciones-page {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 24px 16px 48px;
 }
+
+/* ── Form ───────────────────────────────────────────────── */
 
 .medicion-form-card {
   margin-bottom: 24px;
@@ -15,10 +17,190 @@
   margin-bottom: 4px;
 }
 
+/* ── Section headings ────────────────────────────────────── */
+
+.ficha-section-heading {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold, #F0A500);
+  margin: 28px 0 12px;
+}
+
+/* ── Ficha card ──────────────────────────────────────────── */
+
+.ficha-wrapper {
+  margin-bottom: 8px;
+}
+
+.ficha-card {
+  max-width: 420px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+}
+
+.ficha-logo-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #111;
+  padding: 14px 18px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.ficha-hex {
+  width: 44px;
+  height: 44px;
+  background: var(--gold, #F0A500);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 12px;
+  color: #000;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.ficha-gym-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ficha-gym-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #fff;
+}
+
+.ficha-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ficha-table tr {
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.ficha-table tr:last-child {
+  border-bottom: none;
+}
+
+.ficha-section-label {
+  background: #161616;
+  color: #666;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  text-align: center;
+}
+
+.ficha-name-val {
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  background: #0d0d0d;
+}
+
+.ficha-th {
+  background: #161616;
+  color: var(--gold, #F0A500);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  width: 30%;
+  border-right: 1px solid #1e1e1e;
+}
+
+.ficha-td {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 16px;
+  width: 20%;
+}
+
+/* ── Charts ─────────────────────────────────────────────── */
+
+.charts-section {
+  margin-bottom: 8px;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 540px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric-chart-card {
+  padding: 14px 16px 10px;
+}
+
+.metric-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.metric-chart-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.metric-chart-last {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.metric-trend {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.trend-up   { color: #ef4444; }
+.trend-down { color: #22c55e; }
+
+.metric-chart-empty {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #444;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ── History list ────────────────────────────────────────── */
+
 .mediciones-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .medicion-card {
@@ -43,7 +225,7 @@
 }
 
 .med-table tr {
-  border-bottom: 1px solid var(--black-card, #1a1a1a);
+  border-bottom: 1px solid #1a1a1a;
 }
 
 .med-table tr:last-child {
@@ -53,17 +235,18 @@
 .med-label {
   color: var(--gold, #F0A500);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.5px;
   padding: 8px 12px 8px 0;
   white-space: nowrap;
-  width: 30%;
+  width: 28%;
+  text-transform: uppercase;
 }
 
 .med-valor {
   color: #fff;
-  padding: 8px 20px 8px 0;
+  padding: 8px 16px 8px 0;
   font-size: 14px;
   font-weight: 500;
-  width: 20%;
+  width: 22%;
 }
