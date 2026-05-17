@@ -21,6 +21,8 @@ class User(Base):
     is_active = Column(Boolean, default=False)   # False hasta verificar email
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
+    failed_attempts = Column(Integer, default=0)
+    locked_until = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     routines = relationship("Routine", back_populates="alumno", foreign_keys="Routine.alumno_id")
 
@@ -98,3 +100,12 @@ def get_db():
 
 def create_tables():
     Base.metadata.create_all(bind=engine)
+    # Migración segura: agrega columnas nuevas si no existen (SQLite no soporta ALTER TABLE con constraints)
+    from sqlalchemy import text, inspect as sa_inspect
+    inspector = sa_inspect(engine)
+    existing = {c["name"] for c in inspector.get_columns("users")}
+    with engine.begin() as conn:
+        if "failed_attempts" not in existing:
+            conn.execute(text("ALTER TABLE users ADD COLUMN failed_attempts INTEGER DEFAULT 0"))
+        if "locked_until" not in existing:
+            conn.execute(text("ALTER TABLE users ADD COLUMN locked_until DATETIME"))

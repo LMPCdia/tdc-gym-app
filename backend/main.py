@@ -1,3 +1,5 @@
+import os
+from datetime import datetime, timedelta
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
@@ -5,22 +7,29 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
 import secrets
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from dotenv import load_dotenv
 from database import get_db, User, Routine, Day, Exercise, WeekSet, BodyMeasurement, create_tables
 from auth import (verify_password, get_password_hash, create_access_token,
-                  get_current_user, require_profesor)
+                  get_current_user, require_profesor, validate_password,
+                  MAX_FAILED_ATTEMPTS, LOCKOUT_MINUTES)
 from email_service import (send_verification_email, send_welcome_email,
-                           send_profesor_welcome_email, generate_password)
+                           send_profesor_welcome_email, send_reset_password_email,
+                           generate_password)
 from seed import seed
 
+load_dotenv()
+BASE_URL = os.getenv("FRONTEND_URL", "http://localhost:5173/tdc-gym")
+
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
 app = FastAPI(title="TDC Gym API", version="2.0.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
-
-import os
-from dotenv import load_dotenv
-load_dotenv()
-BASE_URL = os.getenv("FRONTEND_URL", "http://localhost:5173/tdc-gym")
 
 @app.on_event("startup")
 def startup():
@@ -109,6 +118,17 @@ class CreateMeasurementRequest(BaseModel):
     edad_biologica: Optional[int] = None
     grasa_visceral: Optional[int] = None
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
 
 # ── Helpers ───────────────────────────────────────────────
 
@@ -121,7 +141,8 @@ def _generate_tdc_username(apellido: str, nombre: str, dni: str) -> str:
 # ── Auth & Register ────────────────────────────────────────
 
 @app.post("/auth/register")
-def register(body: RegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
     dni_clean = body.dni.strip().replace(".", "")
     if not dni_clean.isdigit():
         raise HTTPException(400, "El DNI debe contener solo números")
@@ -214,20 +235,101 @@ def create_profesor(body: CreateProfesorRequest, db: Session = Depends(get_db),
 
 
 @app.post("/auth/login", response_model=TokenResponse)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(
         (User.tdc_email == form_data.username) | (User.email == form_data.username)
     ).first()
+
+    if user and user.locked_until and user.locked_until > datetime.utcnow():
+        remaining = max(1, int((user.locked_until - datetime.utcnow()).total_seconds() / 60) + 1)
+        raise HTTPException(status_code=429,
+                            detail=f"Cuenta bloqueada por demasiados intentos. Intentá en {remaining} minutos.")
+
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+        if user:
+            user.failed_attempts = (user.failed_attempts or 0) + 1
+            if user.failed_attempts >= MAX_FAILED_ATTEMPTS:
+                user.locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
+                db.commit()
+                raise HTTPException(status_code=429,
+                                    detail=f"Cuenta bloqueada por {MAX_FAILED_ATTEMPTS} intentos fallidos. Intentá en {LOCKOUT_MINUTES} minutos.")
+            db.commit()
+        raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
+
     if not user.is_active:
         raise HTTPException(status_code=401, detail="Tu cuenta no está activa. Verificá tu email.")
+
+    user.failed_attempts = 0
+    user.locked_until = None
+    db.commit()
+
     token = create_access_token({"sub": user.email})
     return {
         "access_token": token, "token_type": "bearer",
         "user": {"id": user.id, "name": user.name, "email": user.email,
                  "tdc_email": user.tdc_email, "dni": user.dni, "role": user.role}
     }
+
+
+@app.post("/auth/change-password")
+def change_password(body: ChangePasswordRequest, db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    if not verify_password(body.current_password, current_user.hashed_password):
+        raise HTTPException(400, "La contraseña actual es incorrecta")
+    errors = validate_password(body.new_password)
+    if errors:
+        raise HTTPException(400, "; ".join(errors))
+    current_user.hashed_password = get_password_hash(body.new_password)
+    db.commit()
+    return {"message": "Contraseña actualizada correctamente"}
+
+
+@app.post("/auth/forgot-password")
+@limiter.limit("3/minute")
+def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(
+        (User.email == body.email) | (User.tdc_email == body.email)
+    ).first()
+    if user and user.is_active:
+        token = f"reset_{secrets.token_urlsafe(32)}"
+        user.verification_token = token
+        db.commit()
+        reset_url = f"{BASE_URL}/reset-password?token={token}"
+        send_reset_password_email(user.email, user.name, reset_url)
+    return {"message": "Si el usuario existe, te enviamos un email con instrucciones."}
+
+
+@app.post("/auth/reset-password")
+def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    if not body.token.startswith("reset_"):
+        raise HTTPException(400, "Token inválido")
+    user = db.query(User).filter(User.verification_token == body.token).first()
+    if not user:
+        raise HTTPException(400, "Token inválido o expirado")
+    errors = validate_password(body.new_password)
+    if errors:
+        raise HTTPException(400, "; ".join(errors))
+    user.hashed_password = get_password_hash(body.new_password)
+    user.verification_token = None
+    user.failed_attempts = 0
+    user.locked_until = None
+    db.commit()
+    return {"message": "Contraseña restablecida correctamente. Ya podés iniciar sesión."}
+
+
+@app.post("/auth/resend-credentials/{user_id}")
+def resend_credentials(user_id: int, db: Session = Depends(get_db),
+                       current_user: User = Depends(require_profesor)):
+    user = db.query(User).filter(User.id == user_id, User.role == "alumno").first()
+    if not user:
+        raise HTTPException(404, "Alumno no encontrado")
+    from email_service import generate_password
+    new_password = generate_password()
+    user.hashed_password = get_password_hash(new_password)
+    db.commit()
+    send_welcome_email(user.email, user.name, user.tdc_email, new_password)
+    return {"message": f"Credenciales reenviadas a {user.email}"}
 
 
 @app.get("/auth/me")
