@@ -71,6 +71,23 @@ class WeekSet(Base):
     exercise = relationship("Exercise", back_populates="semanas")
 
 
+class BodyMeasurement(Base):
+    __tablename__ = "body_measurements"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    fecha = Column(String, nullable=False)
+    edad = Column(Integer, nullable=True)
+    altura = Column(Float, nullable=True)
+    peso = Column(Float, nullable=True)
+    imc = Column(Float, nullable=True)
+    masa_grasa = Column(Float, nullable=True)
+    masa_muscular = Column(Float, nullable=True)
+    edad_biologica = Column(Integer, nullable=True)
+    grasa_visceral = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", foreign_keys=[user_id])
+
+
 def get_db():
     db = SessionLocal()
     try:

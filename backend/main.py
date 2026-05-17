@@ -5,11 +5,11 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
 import secrets
-from database import get_db, User, Routine, Day, Exercise, WeekSet, create_tables
+from database import get_db, User, Routine, Day, Exercise, WeekSet, BodyMeasurement, create_tables
 from auth import (verify_password, get_password_hash, create_access_token,
                   get_current_user, require_profesor)
 from email_service import (send_verification_email, send_welcome_email,
-                           generate_password, get_mail_log, mark_read)
+                           send_profesor_welcome_email, generate_password)
 from seed import seed
 
 app = FastAPI(title="TDC Gym API", version="2.0.0")
@@ -17,7 +17,10 @@ app = FastAPI(title="TDC Gym API", version="2.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
 
-BASE_URL = "http://localhost:5173/tdc-gym"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+BASE_URL = os.getenv("FRONTEND_URL", "http://localhost:5173/tdc-gym")
 
 @app.on_event("startup")
 def startup():
@@ -77,44 +80,73 @@ class UserSummary(BaseModel):
     class Config: from_attributes = True
 
 class RegisterRequest(BaseModel):
-    name: str
+    apellido: str
+    nombre: str
     dni: str
+    email: str
+
+class CreateProfesorRequest(BaseModel):
+    nombre_completo: str
     email: str
 
 class VerifyEmailRequest(BaseModel):
     token: str
 
+class BodyMeasurementSchema(BaseModel):
+    id: int; user_id: int; fecha: str
+    edad: Optional[int]; altura: Optional[float]; peso: Optional[float]
+    imc: Optional[float]; masa_grasa: Optional[float]; masa_muscular: Optional[float]
+    edad_biologica: Optional[int]; grasa_visceral: Optional[int]
+    class Config: from_attributes = True
+
+class CreateMeasurementRequest(BaseModel):
+    fecha: str
+    edad: Optional[int] = None
+    altura: Optional[float] = None
+    peso: Optional[float] = None
+    masa_grasa: Optional[float] = None
+    masa_muscular: Optional[float] = None
+    edad_biologica: Optional[int] = None
+    grasa_visceral: Optional[int] = None
+
+
+# ── Helpers ───────────────────────────────────────────────
+
+def _generate_tdc_username(apellido: str, nombre: str, dni: str) -> str:
+    apellido_clean = apellido.strip().lower().replace(" ", "")
+    nombre_inicial = nombre.strip()[0].lower() if nombre.strip() else "x"
+    return f"{apellido_clean}{nombre_inicial}{dni[:2]}{dni[-2:]}"
+
+
 # ── Auth & Register ────────────────────────────────────────
 
 @app.post("/auth/register")
 def register(body: RegisterRequest, db: Session = Depends(get_db)):
-    # Validate DNI
     dni_clean = body.dni.strip().replace(".", "")
     if not dni_clean.isdigit():
         raise HTTPException(400, "El DNI debe contener solo números")
     if len(dni_clean) < 7 or len(dni_clean) > 9:
         raise HTTPException(400, "DNI inválido (debe tener entre 7 y 9 dígitos)")
-
-    # Check duplicates
     if db.query(User).filter(User.dni == dni_clean).first():
         raise HTTPException(400, "Ya existe una cuenta con ese DNI")
-        # Validación básica de email
     if db.query(User).filter(User.email == body.email).first():
         raise HTTPException(400, "Ya existe una cuenta con ese email")
     if "@" not in body.email or "." not in body.email.split("@")[-1]:
         raise HTTPException(400, "Email inválido")
 
-    tdc_email = f"{dni_clean}@tdc.com"
+    tdc_user = _generate_tdc_username(body.apellido, body.nombre, dni_clean)
+    tdc_email = f"{tdc_user}@tdc.com"
     if db.query(User).filter(User.tdc_email == tdc_email).first():
-        raise HTTPException(400, "Ya existe una cuenta TDC con ese DNI")
+        raise HTTPException(400, "Ya existe una cuenta TDC con ese nombre y DNI")
 
+    full_name = f"{body.apellido.strip().title()} {body.nombre.strip().title()}"
     token = secrets.token_urlsafe(32)
     user = User(
-        name=body.name.strip().title(),
+        name=full_name,
         dni=dni_clean,
         email=body.email,
         tdc_email=tdc_email,
-        hashed_password=get_password_hash(secrets.token_urlsafe(16)),  # temp pass
+        hashed_password=get_password_hash(secrets.token_urlsafe(16)),
         role="alumno",
         is_active=False,
         is_verified=False,
@@ -123,7 +155,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
 
-    send_verification_email(body.email, user.name, token, BASE_URL)
+    send_verification_email(body.email, full_name, token, BASE_URL)
 
     return {
         "message": f"Registro exitoso. Te enviamos un email de verificación a {body.email}.",
@@ -139,7 +171,6 @@ def verify_email(body: VerifyEmailRequest, db: Session = Depends(get_db)):
     if user.is_verified:
         raise HTTPException(400, "Este email ya fue verificado")
 
-    # Generate TDC credentials
     password = generate_password()
     user.hashed_password = get_password_hash(password)
     user.is_verified = True
@@ -147,8 +178,7 @@ def verify_email(body: VerifyEmailRequest, db: Session = Depends(get_db)):
     user.verification_token = None
     db.commit()
 
-    # Send welcome email with credentials
-    send_welcome_email(user.email, user.name, user.dni, password)
+    send_welcome_email(user.email, user.name, user.tdc_email, password)
 
     return {
         "message": "Email verificado exitosamente. Te enviamos tus credenciales de acceso.",
@@ -156,9 +186,35 @@ def verify_email(body: VerifyEmailRequest, db: Session = Depends(get_db)):
     }
 
 
+@app.post("/auth/create-profesor", response_model=UserSummary)
+def create_profesor(body: CreateProfesorRequest, db: Session = Depends(get_db),
+                    current_user: User = Depends(require_profesor)):
+    if "@" not in body.email or "." not in body.email.split("@")[-1]:
+        raise HTTPException(400, "Email inválido")
+    if db.query(User).filter(User.email == body.email).first():
+        raise HTTPException(400, "Ya existe una cuenta con ese email")
+
+    password = generate_password()
+    profesor = User(
+        name=body.nombre_completo.strip().title(),
+        email=body.email,
+        tdc_email=body.email,
+        hashed_password=get_password_hash(password),
+        role="profesor",
+        is_active=True,
+        is_verified=True,
+    )
+    db.add(profesor)
+    db.commit()
+    db.refresh(profesor)
+
+    send_profesor_welcome_email(body.email, profesor.name, password)
+
+    return profesor
+
+
 @app.post("/auth/login", response_model=TokenResponse)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    # Accept both tdc_email (DNI@tdc.com) and personal email
     user = db.query(User).filter(
         (User.tdc_email == form_data.username) | (User.email == form_data.username)
     ).first()
@@ -180,23 +236,62 @@ def me(current_user: User = Depends(get_current_user)):
             "tdc_email": current_user.tdc_email, "dni": current_user.dni, "role": current_user.role}
 
 
-# ── Dev: mail simulator ────────────────────────────────────
-
-@app.get("/dev/mailbox")
-def mailbox():
-    return get_mail_log()
-
-@app.post("/dev/mailbox/{mail_id}/read")
-def read_mail(mail_id: int):
-    mark_read(mail_id)
-    return {"ok": True}
-
-
 # ── Users ─────────────────────────────────────────────────
 
 @app.get("/users", response_model=List[UserSummary])
 def list_users(db: Session = Depends(get_db), current_user: User = Depends(require_profesor)):
     return db.query(User).filter(User.role == "alumno", User.is_active == True).all()
+
+
+# ── Body Measurements ─────────────────────────────────────
+
+@app.get("/users/{user_id}/measurements", response_model=List[BodyMeasurementSchema])
+def list_measurements(user_id: int, db: Session = Depends(get_db),
+                      current_user: User = Depends(get_current_user)):
+    if current_user.role == "alumno" and current_user.id != user_id:
+        raise HTTPException(403, "No tenés acceso")
+    return (db.query(BodyMeasurement)
+              .filter(BodyMeasurement.user_id == user_id)
+              .order_by(BodyMeasurement.created_at.desc())
+              .all())
+
+
+@app.post("/users/{user_id}/measurements", response_model=BodyMeasurementSchema)
+def create_measurement(user_id: int, body: CreateMeasurementRequest,
+                       db: Session = Depends(get_db),
+                       current_user: User = Depends(require_profesor)):
+    alumno = db.query(User).filter(User.id == user_id, User.role == "alumno").first()
+    if not alumno:
+        raise HTTPException(404, "Alumno no encontrado")
+
+    imc = None
+    if body.peso and body.altura and body.altura > 0:
+        imc = round(body.peso / (body.altura ** 2), 1)
+
+    m = BodyMeasurement(
+        user_id=user_id,
+        fecha=body.fecha,
+        edad=body.edad,
+        altura=body.altura,
+        peso=body.peso,
+        imc=imc,
+        masa_grasa=body.masa_grasa,
+        masa_muscular=body.masa_muscular,
+        edad_biologica=body.edad_biologica,
+        grasa_visceral=body.grasa_visceral,
+    )
+    db.add(m); db.commit(); db.refresh(m)
+    return m
+
+
+@app.delete("/measurements/{measurement_id}")
+def delete_measurement(measurement_id: int, db: Session = Depends(get_db),
+                       current_user: User = Depends(require_profesor)):
+    m = db.query(BodyMeasurement).filter(BodyMeasurement.id == measurement_id).first()
+    if not m:
+        raise HTTPException(404)
+    db.delete(m); db.commit()
+    return {"message": "Eliminado"}
 
 
 # ── Routines ──────────────────────────────────────────────
