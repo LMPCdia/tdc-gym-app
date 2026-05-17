@@ -40,16 +40,18 @@ export default function Login() {
           <h2 className="login-title">Ingresar</h2>
 
           <div className="form-group">
-            <label className="form-label">Email</label>
+            <label className="form-label">Usuario TDC</label>
             <input
               className="input-field"
-              type="email"
-              placeholder="tu@email.com"
+              type="text"
+              placeholder="usuario@tdc.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
               autoFocus
+              autoComplete="username"
             />
+            <span className="field-hint">Usá el usuario que recibiste por email (ej: apellidon0000@tdc.com)</span>
           </div>
 
           <div className="form-group">

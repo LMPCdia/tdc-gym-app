@@ -213,6 +213,21 @@ def create_profesor(body: CreateProfesorRequest, db: Session = Depends(get_db),
     return profesor
 
 
+@app.post("/auth/resend-credentials/{user_id}")
+def resend_credentials(user_id: int, db: Session = Depends(get_db),
+                       current_user: User = Depends(require_profesor)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "Usuario no encontrado")
+    password = generate_password()
+    user.hashed_password = get_password_hash(password)
+    user.is_active = True
+    user.is_verified = True
+    db.commit()
+    send_welcome_email(user.email, user.name, user.tdc_email, password)
+    return {"message": f"Credenciales reenviadas a {user.email}"}
+
+
 @app.post("/auth/login", response_model=TokenResponse)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(
