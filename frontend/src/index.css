@@ -1,0 +1,177 @@
+:root {
+  --black: #0a0a0a;
+  --black-soft: #111111;
+  --black-card: #161616;
+  --black-hover: #1e1e1e;
+  --gold: #F0A500;
+  --gold-bright: #FFB800;
+  --gold-dim: #C68400;
+  --gold-pale: #F0A50022;
+  --gold-border: #F0A50044;
+  --white: #FFFFFF;
+  --white-soft: #F5F5F0;
+  --gray: #888888;
+  --gray-dim: #444444;
+  --gray-border: #2a2a2a;
+  --danger: #E03C3C;
+  --success: #3CE080;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-cond: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  --shadow-gold: 0 0 20px rgba(240,165,0,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+
+a { color: inherit; text-decoration: none; }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.2s;
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+  outline: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--black-soft); }
+::-webkit-scrollbar-thumb { background: var(--gray-dim); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+/* Utility */
+.btn-gold {
+  background: var(--gold);
+  color: var(--black);
+  font-family: var(--font-cond);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+}
+.btn-gold:hover { background: var(--gold-bright); transform: translateY(-1px); }
+.btn-gold:active { transform: translateY(0); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--gold);
+  font-family: var(--font-cond);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius);
+  transition: all 0.2s;
+}
+.btn-outline:hover { border-color: var(--gold); background: var(--gold-pale); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gray);
+  font-family: var(--font-cond);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+}
+.btn-ghost:hover { color: var(--white); background: var(--black-hover); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  font-family: var(--font-cond);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+}
+.btn-danger:hover { border-color: var(--danger); background: rgba(224,60,60,0.1); }
+
+.card {
+  background: var(--black-card);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.gold-text { color: var(--gold); }
+.muted { color: var(--gray); }
+.small { font-size: 13px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background: var(--gold-pale);
+  border: 1px solid var(--gold-border);
+  color: var(--gold);
+  font-family: var(--font-cond);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.input-field {
+  width: 100%;
+  background: var(--black-soft);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 14px;
+  transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--gold); }
+.input-field::placeholder { color: var(--gray-dim); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.3s ease forwards; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--gray-dim);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}

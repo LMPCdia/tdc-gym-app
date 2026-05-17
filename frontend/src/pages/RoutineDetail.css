@@ -1,0 +1,222 @@
+.routine-detail {
+  padding: 28px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.back-btn { flex-shrink: 0; align-self: flex-start; margin-top: 4px; }
+.detail-title-block { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.detail-tags { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.detail-title { font-family: var(--font-display); font-size: 32px; letter-spacing: 0.04em; line-height: 1.1; }
+
+/* Day tabs */
+.day-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-tab { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 18px; border-radius: var(--radius); background: var(--black-card); border: 1px solid var(--gray-border); cursor: pointer; transition: all 0.2s; white-space: nowrap; min-width: 110px; }
+.day-tab:hover { border-color: var(--gold-border); }
+.day-tab.active { background: var(--gold-pale); border-color: var(--gold); }
+.day-tab.active .day-number { color: var(--gold); }
+.day-tab.active .day-name { color: var(--white); }
+.day-number { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.1em; color: var(--gray); }
+.day-name { font-family: var(--font-cond); font-size: 12px; font-weight: 600; color: var(--gray); max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+
+/* Day content */
+.day-content { display: flex; flex-direction: column; gap: 16px; }
+
+/* Musculatura banner */
+.musculatura-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--gold-pale);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+}
+.musculatura-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.musculatura-value {
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--white);
+}
+
+/* Entrada en calor / Finalizar con */
+.entrada-calor, .finalizar-con {
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 12px 16px;
+  background: var(--black-card);
+  border-top: 1px solid var(--gray-border);
+  border-right: 1px solid var(--gray-border);
+  border-bottom: 1px solid var(--gray-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.finalizar-con { border-left-color: var(--success); }
+.entrada-label {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-cond); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold);
+}
+.finalizar-con .entrada-label { color: var(--success); }
+.entrada-text { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+/* ── EXERCISES TABLE ── */
+.exercises-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-dim) var(--black-soft);
+}
+
+.exercises-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+  font-size: 13px;
+}
+
+.exercises-table thead tr {
+  background: var(--black-soft);
+  border-bottom: 2px solid var(--gold-border);
+}
+
+.exercises-table th {
+  font-family: var(--font-cond);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 10px 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Column widths */
+.col-num { width: 40px; }
+.col-ejercicio { text-align: left !important; min-width: 200px; }
+.col-sem { width: 80px; }
+.col-carga { width: 68px; }
+.col-action { width: 48px; }
+
+/* Rows */
+.exercise-row { border-bottom: 1px solid var(--gray-border); transition: background 0.15s; }
+.exercise-row:last-child { border-bottom: none; }
+.exercise-row:hover { background: rgba(255,255,255,0.02); }
+
+/* Alternating rows */
+.exercise-row:nth-child(odd) { background: var(--black-card); }
+.exercise-row:nth-child(even) { background: var(--black-soft); }
+.exercise-row:hover { background: var(--black-hover) !important; }
+
+.cell-num {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--gold);
+  padding: 10px 8px;
+}
+
+.cell-ejercicio {
+  padding: 10px 14px 10px 12px;
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--white);
+}
+
+.cell-sem {
+  text-align: center;
+  padding: 10px 6px;
+  font-family: var(--font-cond);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white-soft);
+  letter-spacing: 0.02em;
+}
+
+.cell-carga {
+  text-align: center;
+  padding: 6px 4px;
+}
+
+.cell-empty { color: var(--gray-dim); }
+
+/* Peso cell button */
+.peso-cell {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  height: 32px;
+  border-radius: 4px;
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.peso-cell.has-peso {
+  color: var(--gold);
+  background: var(--gold-pale);
+  border: 1px solid var(--gold-border);
+}
+.peso-cell.has-peso:hover { background: rgba(240,165,0,0.2); }
+
+.peso-cell.no-peso {
+  color: var(--gray-dim);
+  border: 1px dashed var(--gray-dim);
+}
+.peso-cell.no-peso:hover { border-color: var(--gold-dim); color: var(--gold-dim); }
+
+.peso-dot { font-size: 18px; line-height: 1; }
+
+.peso-cell-input {
+  width: 58px;
+  background: var(--black-soft);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  color: var(--gold);
+  font-family: var(--font-cond);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 4px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(240,165,0,0.2);
+}
+
+.cell-action { text-align: center; padding: 6px 4px; }
+
+.add-exercise-btn { align-self: flex-start; }
+
+@media (max-width: 600px) {
+  .detail-title { font-size: 24px; }
+  .exercises-table { min-width: 580px; }
+}

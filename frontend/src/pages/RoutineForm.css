@@ -1,0 +1,196 @@
+.routine-form-page {
+  padding: 28px 24px;
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.routine-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-section, .day-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.day-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-family: var(--font-cond);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+
+/* Exercise form */
+.exercise-form-block {
+  background: var(--black-soft);
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exercise-form-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exercise-form-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gold-pale);
+  border: 1px solid var(--gold-border);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.exercise-name-input {
+  flex: 1;
+}
+
+/* Weeksets grid */
+.weeksets-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ws-header-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 1fr;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.ws-col-label {
+  font-family: var(--font-cond);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-dim);
+}
+
+.ws-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.ws-semana {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--gold);
+  text-align: center;
+}
+
+.ws-input {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.add-day-btn {
+  align-self: flex-start;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+/* Weeksets table inside form */
+.weeksets-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-border);
+}
+.weeksets-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 460px;
+}
+.weeksets-table th {
+  font-family: var(--font-cond);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  padding: 7px 10px;
+  text-align: center;
+  background: var(--black-soft);
+  border-bottom: 1px solid var(--gray-border);
+}
+.weeksets-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--gray-border);
+}
+.weeksets-table tr:last-child td { border-bottom: none; }
+.ws-sem-cell {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--gold);
+  text-align: center;
+  width: 36px;
+  padding: 5px 4px;
+}
+.ws-input {
+  padding: 7px 8px;
+  font-size: 13px;
+  min-width: 0;
+}
