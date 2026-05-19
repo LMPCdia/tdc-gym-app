@@ -11,7 +11,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from dotenv import load_dotenv
-from database import get_db, User, Routine, Day, Exercise, WeekSet, BodyMeasurement, create_tables
+from database import get_db, User, Routine, Day, Exercise, WeekSet, BodyMeasurement, ExerciseCatalog, create_tables
 from auth import (verify_password, get_password_hash, create_access_token,
                   get_current_user, require_profesor, validate_password,
                   MAX_FAILED_ATTEMPTS, LOCKOUT_MINUTES)
@@ -118,6 +118,13 @@ class CreateMeasurementRequest(BaseModel):
     edad_biologica: Optional[int] = None
     grasa_visceral: Optional[int] = None
 
+class ExerciseCatalogSchema(BaseModel):
+    id: int; nombre: str; grupo: str; youtube_url: Optional[str]
+    class Config: from_attributes = True
+
+class UpdateYoutubeUrlRequest(BaseModel):
+    youtube_url: Optional[str] = None
+
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
@@ -186,11 +193,14 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
 
 @app.post("/auth/verify-email")
 def verify_email(body: VerifyEmailRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.verification_token == body.token).first()
+    # Búsqueda con lock para evitar race condition por doble-clic
+    user = db.query(User).filter(
+        User.verification_token == body.token,
+        User.is_verified == False
+    ).with_for_update().first()
+
     if not user:
-        raise HTTPException(400, "Token de verificación inválido o expirado")
-    if user.is_verified:
-        raise HTTPException(400, "Este email ya fue verificado")
+        raise HTTPException(400, "Token de verificación inválido o ya utilizado")
 
     password = generate_password()
     user.hashed_password = get_password_hash(password)
@@ -522,6 +532,38 @@ def get_exercises_catalog(search: str = "", current_user: User = Depends(get_cur
         sl = search.lower()
         return [e for e in get_all_exercises() if sl in e["nombre"].lower()]
     return [{"grupo": g, "ejercicios": e} for g, e in EXERCISES_DB.items()]
+
+
+# ── Exercise Catalog (YouTube) ────────────────────────────
+
+@app.get("/exercise-catalog", response_model=List[ExerciseCatalogSchema])
+def list_exercise_catalog(
+    grupo: Optional[str] = None,
+    search: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    q = db.query(ExerciseCatalog)
+    if grupo:
+        q = q.filter(ExerciseCatalog.grupo == grupo)
+    if search:
+        q = q.filter(ExerciseCatalog.nombre.ilike(f"%{search}%"))
+    return q.order_by(ExerciseCatalog.grupo, ExerciseCatalog.nombre).all()
+
+
+@app.patch("/exercise-catalog/{entry_id}", response_model=ExerciseCatalogSchema)
+def update_exercise_youtube(
+    entry_id: int,
+    body: UpdateYoutubeUrlRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_profesor)
+):
+    entry = db.query(ExerciseCatalog).filter(ExerciseCatalog.id == entry_id).first()
+    if not entry:
+        raise HTTPException(404, "Ejercicio no encontrado en el catálogo")
+    entry.youtube_url = body.youtube_url or None
+    db.commit(); db.refresh(entry)
+    return entry
 
 
 @app.get("/")

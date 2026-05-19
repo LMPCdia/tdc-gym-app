@@ -4,6 +4,28 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api'
 import './RoutineDetail.css'
 
+function ConfirmDeleteModal({ nombre, onConfirm, onCancel }) {
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-card" onClick={e => e.stopPropagation()}>
+        <div className="modal-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </div>
+        <h3 className="modal-title">Eliminar ejercicio</h3>
+        <p className="modal-desc">
+          ¿Estás seguro que querés eliminar <strong>{nombre}</strong>? Esta acción no se puede deshacer.
+        </p>
+        <div className="modal-actions">
+          <button className="btn-ghost modal-btn-cancel" onClick={onCancel}>Cancelar</button>
+          <button className="modal-btn-delete" onClick={onConfirm}>Eliminar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function RoutineDetail() {
   const { id } = useParams()
   const { user } = useAuth()
@@ -13,11 +35,20 @@ export default function RoutineDetail() {
   const [editingPeso, setEditingPeso] = useState(null)
   const [saving, setSaving] = useState(false)
   const [activeDay, setActiveDay] = useState(0)
+  const [deleteModal, setDeleteModal] = useState({ open: false, exId: null, nombre: '' })
+  const [urlMap, setUrlMap] = useState({})
 
   useEffect(() => {
     api.get(`/routines/${id}`)
       .then(({ data }) => { setRoutine(data); setLoading(false) })
       .catch(() => navigate('/dashboard'))
+    api.get('/exercise-catalog')
+      .then(({ data }) => {
+        const map = {}
+        data.forEach(e => { if (e.youtube_url) map[e.nombre] = e.youtube_url })
+        setUrlMap(map)
+      })
+      .catch(() => {})
   }, [id])
 
   const startEdit = (ws) => setEditingPeso({ wsId: ws.id, value: ws.peso != null ? String(ws.peso) : '' })
@@ -43,14 +74,14 @@ export default function RoutineDetail() {
   }
 
   const deleteExercise = async (exId) => {
-    if (!confirm('¿Eliminar este ejercicio?')) return
     try {
       await api.delete(`/exercises/${exId}`)
       setRoutine(prev => ({
         ...prev,
         dias: prev.dias.map(d => ({ ...d, ejercicios: d.ejercicios.filter(ej => ej.id !== exId) }))
       }))
-    } catch { alert('Error') }
+    } catch { alert('Error al eliminar') }
+    setDeleteModal({ open: false, exId: null, nombre: '' })
   }
 
   if (loading) return <div style={{display:'flex',justifyContent:'center',padding:80}}><div className="spinner" style={{width:36,height:36}}/></div>
@@ -107,6 +138,13 @@ export default function RoutineDetail() {
             </div>
           )}
 
+          {/* Scroll hint visible solo en mobile */}
+          <div className="table-scroll-hint">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            deslizá la tabla
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
           {/* Exercises table - formato Excel */}
           <div className="exercises-table-wrap">
             <table className="exercises-table">
@@ -135,7 +173,22 @@ export default function RoutineDetail() {
                   return (
                     <tr key={ej.id} className="exercise-row">
                       <td className="cell-num">{idx + 1}</td>
-                      <td className="cell-ejercicio">{ej.nombre}</td>
+                      <td className="cell-ejercicio">
+                        {urlMap[ej.nombre] ? (
+                          <a
+                            className="exercise-link"
+                            href={urlMap[ej.nombre]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Ver video en YouTube"
+                          >
+                            {ej.nombre}
+                            <svg className="yt-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
+                            </svg>
+                          </a>
+                        ) : ej.nombre}
+                      </td>
                       {[1,2,3,4].map(sem => {
                         const ws = semMap[sem]
                         return [
@@ -167,7 +220,8 @@ export default function RoutineDetail() {
                       })}
                       {user?.role === 'profesor' && (
                         <td className="cell-action">
-                          <button className="btn-danger" style={{padding:'3px 8px',fontSize:11}} onClick={() => deleteExercise(ej.id)}>✕</button>
+                          <button className="btn-danger" style={{padding:'3px 8px',fontSize:11}}
+                            onClick={() => setDeleteModal({ open: true, exId: ej.id, nombre: ej.nombre })}>✕</button>
                         </td>
                       )}
                     </tr>
@@ -195,6 +249,14 @@ export default function RoutineDetail() {
             </button>
           )}
         </div>
+      )}
+
+      {deleteModal.open && (
+        <ConfirmDeleteModal
+          nombre={deleteModal.nombre}
+          onConfirm={() => deleteExercise(deleteModal.exId)}
+          onCancel={() => setDeleteModal({ open: false, exId: null, nombre: '' })}
+        />
       )}
 
       {saving && (

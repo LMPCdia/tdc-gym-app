@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Boolean, Text, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Boolean, Text, DateTime, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -90,6 +90,16 @@ class BodyMeasurement(Base):
     user = relationship("User", foreign_keys=[user_id])
 
 
+class ExerciseCatalog(Base):
+    """Catálogo centralizado de ejercicios con URL de YouTube opcional."""
+    __tablename__ = "exercise_catalog"
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String, nullable=False, index=True)
+    grupo = Column(String, nullable=False)
+    youtube_url = Column(String, nullable=True)
+    __table_args__ = (UniqueConstraint('nombre', 'grupo', name='uq_nombre_grupo'),)
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -109,3 +119,14 @@ def create_tables():
             conn.execute(text("ALTER TABLE users ADD COLUMN failed_attempts INTEGER DEFAULT 0"))
         if "locked_until" not in existing:
             conn.execute(text("ALTER TABLE users ADD COLUMN locked_until DATETIME"))
+    # Poblar el catálogo de ejercicios si está vacío
+    db = SessionLocal()
+    try:
+        if db.query(ExerciseCatalog).count() == 0:
+            from exercises_db import EXERCISES_DB
+            for grupo, nombres in EXERCISES_DB.items():
+                for nombre in nombres:
+                    db.add(ExerciseCatalog(nombre=nombre, grupo=grupo))
+            db.commit()
+    finally:
+        db.close()

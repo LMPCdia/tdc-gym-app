@@ -46,5 +46,5 @@ echo  Docs Swagger: http://localhost:8000/docs
 echo  (Ctrl+C para detener)
 echo ============================================
 echo.
-uvicorn main:app --reload
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 pause

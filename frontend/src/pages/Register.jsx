@@ -57,7 +57,7 @@ export default function Register() {
           <form className="login-form" onSubmit={handleSubmit}>
             <h2 className="login-title">Crear cuenta</h2>
 
-            <div className="form-row" style={{display:'flex',gap:12}}>
+            <div className="register-name-row form-row" style={{display:'flex',gap:12}}>
               <div className="form-group" style={{flex:1}}>
                 <label className="form-label">Apellido</label>
                 <input className="input-field" value={form.apellido}

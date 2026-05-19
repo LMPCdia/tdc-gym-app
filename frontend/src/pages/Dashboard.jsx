@@ -170,6 +170,12 @@ function AlumnoInlineRoutine({ detail, activeDay, setActiveDay, editingPeso, set
             </div>
           )}
 
+          <div className="table-scroll-hint">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            deslizá la tabla
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
           <div className="exercises-table-wrap">
             <table className="exercises-table">
               <thead>
@@ -480,6 +486,22 @@ export default function Dashboard() {
 
       {/* CENTER: inline routine detail */}
       <main className="routine-main">
+        {/* Mobile: selector de rutina (reemplaza el sidebar) */}
+        {routines.length > 0 && (
+          <div className="mobile-routine-picker">
+            <span className="mobile-routine-label">Mis rutinas</span>
+            <select
+              className="mobile-routine-select"
+              value={selectedId || ''}
+              onChange={e => selectRoutine(parseInt(e.target.value))}
+            >
+              {routines.map(r => (
+                <option key={r.id} value={r.id}>{r.nombre}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {loadingDetail ? (
           <div className="loading-center">
             <div className="spinner" style={{ width: 32, height: 32 }} />

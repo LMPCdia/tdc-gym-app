@@ -35,3 +35,10 @@
   padding-top: 4px;
   border-top: 1px solid var(--gray-border);
 }
+
+/* Mobile: el row de apellido/nombre stackea verticalmente */
+@media (max-width: 480px) {
+  .register-name-row {
+    flex-direction: column !important;
+  }
+}

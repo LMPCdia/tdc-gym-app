@@ -294,9 +294,32 @@
 
 .add-exercise-btn { align-self: flex-start; }
 
-@media (max-width: 600px) {
-  .detail-title { font-size: 24px; }
-  .exercises-table { min-width: 580px; }
+/* Hint de scroll horizontal */
+.table-scroll-hint {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .routine-detail { padding: 14px 12px; gap: 14px; }
+  .detail-title { font-size: 22px; }
+  .exercises-table { min-width: 560px; }
+  .day-tab { padding: 8px 12px; min-width: 90px; }
+
+  .table-scroll-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: var(--font-cond);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--gray);
+    padding: 4px 0 2px;
+    text-transform: uppercase;
+  }
+
+  .add-exercise-btn { width: 100%; justify-content: center; }
 }
 
 /* ── MODAL ELIMINAR EJERCICIO ── */
@@ -401,3 +424,16 @@
   background: #c93030;
   transform: translateY(-1px);
 }
+
+/* ── YouTube exercise link ── */
+.exercise-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--white-soft);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.exercise-link:hover { color: var(--gold); }
+.yt-icon { color: #ff4444; flex-shrink: 0; }
+.exercise-link:hover .yt-icon { color: #ff2222; }

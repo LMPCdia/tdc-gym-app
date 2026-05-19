@@ -9,6 +9,8 @@ export default function ExerciseAutocomplete({ value, onChange, placeholder = "B
   const [open, setOpen] = useState(false)
   const [selectedGrupo, setSelectedGrupo] = useState('')
   const ref = useRef(null)
+  const pillsRef = useRef(null)
+  const dragRef = useRef({ dragging: false, startX: 0, scrollLeft: 0 })
 
   useEffect(() => {
     api.get('/exercises/catalog').then(({ data }) => setCatalog(data)).catch(() => {})
@@ -36,6 +38,33 @@ export default function ExerciseAutocomplete({ value, onChange, placeholder = "B
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Drag-to-scroll en las pills (mouse)
+  const onPillsMouseDown = (e) => {
+    dragRef.current = { dragging: true, startX: e.pageX - pillsRef.current.offsetLeft, scrollLeft: pillsRef.current.scrollLeft }
+  }
+  const onPillsMouseMove = (e) => {
+    if (!dragRef.current.dragging) return
+    e.preventDefault()
+    const x = e.pageX - pillsRef.current.offsetLeft
+    pillsRef.current.scrollLeft = dragRef.current.scrollLeft - (x - dragRef.current.startX)
+  }
+  const onPillsMouseUp = () => { dragRef.current.dragging = false }
+
+  // Wheel vertical → scroll horizontal en las pills
+  const onPillsWheel = (e) => {
+    if (pillsRef.current) {
+      e.preventDefault()
+      pillsRef.current.scrollLeft += e.deltaY
+    }
+  }
+
+  useEffect(() => {
+    const el = pillsRef.current
+    if (!el) return
+    el.addEventListener('wheel', onPillsWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onPillsWheel)
   }, [])
 
   const grupos = catalog.map(g => g.grupo)
@@ -73,7 +102,14 @@ export default function ExerciseAutocomplete({ value, onChange, placeholder = "B
       {open && (
         <div className="autocomplete-dropdown">
           {/* Grupo filter pills */}
-          <div className="grupo-pills">
+          <div
+            className="grupo-pills"
+            ref={pillsRef}
+            onMouseDown={onPillsMouseDown}
+            onMouseMove={onPillsMouseMove}
+            onMouseUp={onPillsMouseUp}
+            onMouseLeave={onPillsMouseUp}
+          >
             <button
               type="button"
               className={`grupo-pill ${!selectedGrupo ? 'active' : ''}`}

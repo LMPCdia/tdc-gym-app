@@ -14,6 +14,7 @@ import Mediciones from './pages/Mediciones'
 import ChangePassword from './pages/ChangePassword'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import ExerciseCatalog from './pages/ExerciseCatalog'
 
 function PrivateRoute({ children, profesorOnly = false }) {
   const { user } = useAuth()
@@ -38,6 +39,7 @@ function AppLayout() {
           <Route path="/routines/:id" element={<PrivateRoute><RoutineDetail /></PrivateRoute>} />
           <Route path="/routines/:id/edit" element={<PrivateRoute profesorOnly><RoutineForm /></PrivateRoute>} />
           <Route path="/routines/:routineId/days/:dayId/add-exercise" element={<PrivateRoute profesorOnly><AddExercise /></PrivateRoute>} />
+          <Route path="/exercise-catalog" element={<PrivateRoute profesorOnly><ExerciseCatalog /></PrivateRoute>} />
           <Route path="/alumnos" element={<PrivateRoute profesorOnly><Alumnos /></PrivateRoute>} />
           <Route path="/alumnos/:id/mediciones" element={<PrivateRoute profesorOnly><Mediciones /></PrivateRoute>} />
           <Route path="/mis-mediciones" element={<PrivateRoute><Mediciones /></PrivateRoute>} />

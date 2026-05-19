@@ -153,10 +153,18 @@ input, select, textarea {
   font-family: var(--font-body);
   font-size: 14px;
   padding: 10px 14px;
+  min-height: 44px;
   transition: border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 .input-field:focus { border-color: var(--gold); }
 .input-field::placeholder { color: var(--gray-dim); }
+
+/* Touch target mínimo para botones */
+@media (max-width: 768px) {
+  .btn-gold, .btn-outline, .btn-ghost { min-height: 44px; }
+  .input-field { font-size: 16px; } /* Evita zoom automático en iOS */
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }

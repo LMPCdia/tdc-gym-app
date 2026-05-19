@@ -58,6 +58,17 @@ export default function Navbar() {
 
             {menuOpen && (
               <div className="user-dropdown">
+                {user.role === 'profesor' && (
+                  <>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => { setMenuOpen(false); navigate('/exercise-catalog') }}
+                    >
+                      🎬 Catálogo de ejercicios
+                    </button>
+                    <div className="dropdown-separator" />
+                  </>
+                )}
                 <button
                   className="dropdown-item"
                   onClick={() => { setMenuOpen(false); navigate('/change-password') }}

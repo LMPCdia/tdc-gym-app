@@ -46,13 +46,18 @@
 .grupo-pills {
   display: flex;
   gap: 5px;
-  padding: 10px 10px 8px;
+  padding: 10px 10px 6px;
   overflow-x: auto;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-dim) transparent;
   border-bottom: 1px solid var(--gray-border);
   flex-shrink: 0;
+  cursor: grab;
 }
-.grupo-pills::-webkit-scrollbar { display: none; }
+.grupo-pills:active { cursor: grabbing; }
+.grupo-pills::-webkit-scrollbar { height: 3px; }
+.grupo-pills::-webkit-scrollbar-track { background: transparent; }
+.grupo-pills::-webkit-scrollbar-thumb { background: var(--gray-dim); border-radius: 2px; }
 
 .grupo-pill {
   background: var(--black-soft);
