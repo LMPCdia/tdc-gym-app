@@ -8,3 +8,10 @@ __pycache__/
 venv/
 .venv/
 *.egg-info/
+
+# Scripts de utilidad con credenciales — nunca committear
+backend/reset_user.py
+backend/reset_*.py
+backend/seed_*.py
+backend/fix_*.py
+backend/tmp_*.py
