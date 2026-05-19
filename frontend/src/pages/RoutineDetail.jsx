@@ -4,6 +4,10 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api'
 import './RoutineDetail.css'
 
+function parseItems(text) {
+  return (text || '').split('|').map(s => s.trim()).filter(Boolean)
+}
+
 function ConfirmDeleteModal({ nombre, onConfirm, onCancel }) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -45,7 +49,8 @@ export default function RoutineDetail() {
     api.get('/exercise-catalog')
       .then(({ data }) => {
         const map = {}
-        data.forEach(e => { if (e.youtube_url) map[e.nombre] = e.youtube_url })
+        data.forEach(e => { map[e.nombre.toLowerCase().trim()] = e.youtube_url || null })
+        data.forEach(e => { if (e.youtube_url) map[e.nombre.toLowerCase().trim()] = e.youtube_url })
         setUrlMap(map)
       })
       .catch(() => {})
@@ -129,12 +134,23 @@ export default function RoutineDetail() {
 
           {/* Entrada en calor */}
           {currentDay.entrada_calor && (
-            <div className="entrada-calor card">
-              <div className="entrada-label">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                Entrada en calor
+            <div className="entrada-calor">
+              <div className="warmup-header">
+                <div className="warmup-badge warmup-badge--fire">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                  ENTRADA EN CALOR
+                </div>
               </div>
-              <p className="entrada-text">{currentDay.entrada_calor}</p>
+              <ul className="warmup-list">
+                {parseItems(currentDay.entrada_calor).map((item, i) => (
+                  <li key={i} className="warmup-item warmup-item--fire">
+                    <span className="warmup-bullet warmup-bullet--fire">{i + 1}</span>
+                    <span className="warmup-text">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -174,20 +190,23 @@ export default function RoutineDetail() {
                     <tr key={ej.id} className="exercise-row">
                       <td className="cell-num">{idx + 1}</td>
                       <td className="cell-ejercicio">
-                        {urlMap[ej.nombre] ? (
-                          <a
-                            className="exercise-link"
-                            href={urlMap[ej.nombre]}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Ver video en YouTube"
-                          >
-                            {ej.nombre}
-                            <svg className="yt-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
-                            </svg>
-                          </a>
-                        ) : ej.nombre}
+                        {(() => {
+                          const videoUrl = urlMap[ej.nombre.toLowerCase().trim()]
+                          return videoUrl ? (
+                            <a
+                              className="exercise-link"
+                              href={videoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ver video en YouTube"
+                            >
+                              {ej.nombre}
+                              <svg className="yt-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
+                              </svg>
+                            </a>
+                          ) : ej.nombre
+                        })()}
                       </td>
                       {[1,2,3,4].map(sem => {
                         const ws = semMap[sem]
@@ -233,12 +252,28 @@ export default function RoutineDetail() {
 
           {/* Finalizar con */}
           {currentDay.finalizar_con && (
-            <div className="finalizar-con card">
-              <div className="entrada-label">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Finalizar con
+            <div className="finalizar-con">
+              <div className="warmup-header">
+                <div className="warmup-badge warmup-badge--cool">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22V12m0 0C12 7 7 4 2 6m10 6c0-5 5-8 10-6" />
+                    <path d="M5 20c2-2 4.5-3 7-3s5 1 7 3" />
+                  </svg>
+                  ELONGACIONES / FINALIZAR
+                </div>
               </div>
-              <p className="entrada-text">{currentDay.finalizar_con}</p>
+              <ul className="warmup-list">
+                {parseItems(currentDay.finalizar_con).map((item, i) => (
+                  <li key={i} className="warmup-item warmup-item--cool">
+                    <span className="warmup-bullet warmup-bullet--cool">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                    <span className="warmup-text warmup-text--cool">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

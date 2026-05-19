@@ -2,8 +2,10 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--black-soft);
-  border-bottom: 1px solid var(--gray-border);
+  background: rgba(10, 10, 10, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(240,165,0,0.1);
   padding: 0 24px;
   height: 60px;
   display: flex;

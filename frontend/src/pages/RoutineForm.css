@@ -194,3 +194,66 @@
   font-size: 13px;
   min-width: 0;
 }
+
+/* ── Warmup / cooldown builder ── */
+.warmup-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.warmup-builder--fire {
+  background: rgba(240,165,0,0.05);
+  border: 1px solid rgba(240,165,0,0.2);
+}
+
+.warmup-builder--cool {
+  background: rgba(60,224,128,0.04);
+  border: 1px solid rgba(60,224,128,0.18);
+}
+
+.warmup-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.warmup-item-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.warmup-item-num--fire {
+  background: rgba(240,165,0,0.15);
+  border: 1px solid rgba(240,165,0,0.35);
+  color: var(--gold);
+}
+
+.warmup-item-num--cool {
+  background: rgba(60,224,128,0.12);
+  border: 1px solid rgba(60,224,128,0.3);
+  color: var(--success);
+}
+
+.warmup-texto-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.warmup-add-btn {
+  align-self: flex-start;
+  font-size: 12px;
+  padding: 5px 10px;
+  margin-top: 2px;
+}

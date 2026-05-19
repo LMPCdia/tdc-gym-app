@@ -92,7 +92,30 @@ function StatsPanel({ userId }) {
   )
 }
 
-function AlumnoInlineRoutine({ detail, activeDay, setActiveDay, editingPeso, setEditingPeso, saving, setSaving, setDetail }) {
+function ConfirmDeleteRoutineModal({ nombre, onConfirm, onCancel }) {
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-card" onClick={e => e.stopPropagation()}>
+        <div className="modal-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </div>
+        <h3 className="modal-title">Eliminar rutina</h3>
+        <p className="modal-desc">
+          ¿Estás seguro que querés eliminar <strong>{nombre}</strong>? Esta acción no se puede deshacer.
+        </p>
+        <div className="modal-actions">
+          <button className="btn-ghost modal-btn-cancel" onClick={onCancel}>Cancelar</button>
+          <button className="modal-btn-delete" onClick={onConfirm}>Eliminar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AlumnoInlineRoutine({ detail, activeDay, setActiveDay, editingPeso, setEditingPeso, saving, setSaving, setDetail, urlMap }) {
   const currentDay = detail.dias[activeDay]
 
   const startEdit = (ws) => setEditingPeso({ wsId: ws.id, value: ws.peso != null ? String(ws.peso) : '' })
@@ -206,7 +229,25 @@ function AlumnoInlineRoutine({ detail, activeDay, setActiveDay, editingPeso, set
                   return (
                     <tr key={ej.id} className="exercise-row">
                       <td className="cell-num">{idx + 1}</td>
-                      <td className="cell-ejercicio">{ej.nombre}</td>
+                      <td className="cell-ejercicio">
+                        {(() => {
+                          const videoUrl = urlMap?.[ej.nombre.toLowerCase().trim()]
+                          return videoUrl ? (
+                            <a
+                              className="exercise-link"
+                              href={videoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ver video en YouTube"
+                            >
+                              {ej.nombre}
+                              <svg className="yt-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
+                              </svg>
+                            </a>
+                          ) : ej.nombre
+                        })()}
+                      </td>
                       {[1, 2, 3, 4].map(sem => {
                         const ws = semMap[sem]
                         return [
@@ -293,6 +334,8 @@ export default function Dashboard() {
   const [routines, setRoutines] = useState([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
+  const [deleteModal, setDeleteModal] = useState({ open: false, id: null, nombre: '' })
+  const [urlMap, setUrlMap] = useState({})
 
   // Profesor: crear profesor panel
   const [showProfeForm, setShowProfeForm] = useState(false)
@@ -309,7 +352,18 @@ export default function Dashboard() {
   const [editingPeso, setEditingPeso] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { fetchRoutines() }, [])
+  useEffect(() => {
+    fetchRoutines()
+    api.get('/exercise-catalog')
+      .then(({ data }) => {
+        const map = {}
+        // Primero cargar entradas SIN url (para que las CON url las pisen)
+        data.forEach(e => { map[e.nombre.toLowerCase().trim()] = e.youtube_url || null })
+        data.forEach(e => { if (e.youtube_url) map[e.nombre.toLowerCase().trim()] = e.youtube_url })
+        setUrlMap(map)
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (user?.role === 'alumno' && routines.length > 0 && !selectedId) {
@@ -338,9 +392,14 @@ export default function Dashboard() {
     finally { setLoadingDetail(false) }
   }
 
-  const handleDelete = async (id, e) => {
+  const openDeleteModal = (id, nombre, e) => {
     e.stopPropagation()
-    if (!confirm('¿Eliminar esta rutina?')) return
+    setDeleteModal({ open: true, id, nombre })
+  }
+
+  const confirmDelete = async () => {
+    const id = deleteModal.id
+    setDeleteModal({ open: false, id: null, nombre: '' })
     setDeleting(id)
     try {
       await api.delete(`/routines/${id}`)
@@ -426,7 +485,7 @@ export default function Dashboard() {
               <div key={r.id} className="routine-card card" onClick={() => navigate(`/routines/${r.id}`)}>
                 <div className="routine-card-top">
                   <span className="tag">{r.objetivo}</span>
-                  <button className="btn-danger" onClick={e => handleDelete(r.id, e)}
+                  <button className="btn-danger" onClick={e => openDeleteModal(r.id, r.nombre, e)}
                     disabled={deleting === r.id} style={{ padding: '4px 10px', fontSize: 12 }}>
                     {deleting === r.id ? '...' : 'Eliminar'}
                   </button>
@@ -449,6 +508,14 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        )}
+
+        {deleteModal.open && (
+          <ConfirmDeleteRoutineModal
+            nombre={deleteModal.nombre}
+            onConfirm={confirmDelete}
+            onCancel={() => setDeleteModal({ open: false, id: null, nombre: '' })}
+          />
         )}
       </div>
     )
@@ -516,6 +583,7 @@ export default function Dashboard() {
             saving={saving}
             setSaving={setSaving}
             setDetail={setDetail}
+            urlMap={urlMap}
           />
         ) : (
           <div className="inline-empty">
