@@ -1,6 +1,9 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Usa la misma IP/host desde donde se sirve el frontend, puerto 8000
+// Así funciona en localhost, en red local y sin importar si cambia la IP
+const API_URL = import.meta.env.VITE_API_URL ||
+  `${window.location.protocol}//${window.location.hostname}:8000`
 
 const api = axios.create({ baseURL: API_URL })
 
