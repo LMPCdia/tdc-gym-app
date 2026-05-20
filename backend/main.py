@@ -48,6 +48,8 @@ class WeekSetSchema(BaseModel):
 
 class ExerciseSchema(BaseModel):
     id: int; numero: int; nombre: str; semanas: List[WeekSetSchema]
+    youtube_url: Optional[str] = None
+    descripcion: Optional[str] = None
     class Config: from_attributes = True
 
 class DaySchema(BaseModel):
@@ -119,11 +121,12 @@ class CreateMeasurementRequest(BaseModel):
     grasa_visceral: Optional[int] = None
 
 class ExerciseCatalogSchema(BaseModel):
-    id: int; nombre: str; grupo: str; youtube_url: Optional[str]
+    id: int; nombre: str; grupo: str; youtube_url: Optional[str]; descripcion: Optional[str] = None
     class Config: from_attributes = True
 
 class UpdateYoutubeUrlRequest(BaseModel):
     youtube_url: Optional[str] = None
+    descripcion: Optional[str] = None
 
 class ChangePasswordRequest(BaseModel):
     current_password: str
@@ -430,8 +433,22 @@ def get_routine(routine_id: int, db: Session = Depends(get_db), current_user: Us
     if current_user.role == "alumno" and routine.alumno_id != current_user.id:
         raise HTTPException(403, "No tenés acceso a esta rutina")
     alumno = db.query(User).filter(User.id == routine.alumno_id).first()
+
+    # Cargar catálogo de una sola query y construir mapa nombre -> (url, desc)
+    catalog_entries = db.query(ExerciseCatalog).all()
+    catalog_map = {e.nombre.lower().strip(): e for e in catalog_entries}
+
     r = RoutineSchema.model_validate(routine)
     r.alumno_nombre = alumno.name if alumno else ""
+
+    # Enriquecer cada ejercicio con datos del catálogo
+    for day in r.dias:
+        for ej in day.ejercicios:
+            cat = catalog_map.get(ej.nombre.lower().strip())
+            if cat:
+                ej.youtube_url = cat.youtube_url
+                ej.descripcion = cat.descripcion
+
     return r
 
 
@@ -562,6 +579,8 @@ def update_exercise_youtube(
     if not entry:
         raise HTTPException(404, "Ejercicio no encontrado en el catálogo")
     entry.youtube_url = body.youtube_url or None
+    if body.descripcion is not None:
+        entry.descripcion = body.descripcion.strip() or None
     db.commit(); db.refresh(entry)
     return entry
 

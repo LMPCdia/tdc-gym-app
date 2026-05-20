@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Boolean, Text, DateTime, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Boolean, Text, DateTime, UniqueConstraint, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -91,12 +91,13 @@ class BodyMeasurement(Base):
 
 
 class ExerciseCatalog(Base):
-    """Catálogo centralizado de ejercicios con URL de YouTube opcional."""
+    """Catálogo centralizado de ejercicios con URL de YouTube y descripción opcionales."""
     __tablename__ = "exercise_catalog"
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, nullable=False, index=True)
     grupo = Column(String, nullable=False)
     youtube_url = Column(String, nullable=True)
+    descripcion = Column(Text, nullable=True)
     __table_args__ = (UniqueConstraint('nombre', 'grupo', name='uq_nombre_grupo'),)
 
 
@@ -114,11 +115,14 @@ def create_tables():
     from sqlalchemy import text, inspect as sa_inspect
     inspector = sa_inspect(engine)
     existing = {c["name"] for c in inspector.get_columns("users")}
+    catalog_cols = {c["name"] for c in inspector.get_columns("exercise_catalog")} if "exercise_catalog" in inspector.get_table_names() else set()
     with engine.begin() as conn:
         if "failed_attempts" not in existing:
             conn.execute(text("ALTER TABLE users ADD COLUMN failed_attempts INTEGER DEFAULT 0"))
         if "locked_until" not in existing:
             conn.execute(text("ALTER TABLE users ADD COLUMN locked_until DATETIME"))
+        if "descripcion" not in catalog_cols:
+            conn.execute(text("ALTER TABLE exercise_catalog ADD COLUMN descripcion TEXT"))
     # Poblar el catálogo de ejercicios si está vacío
     db = SessionLocal()
     try:

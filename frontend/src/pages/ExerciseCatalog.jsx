@@ -6,6 +6,7 @@ import './ExerciseCatalog.css'
 /* ── Modal para asignar URL de YouTube ───────────────────── */
 function YoutubeModal({ exercise, onSave, onClose }) {
   const [url, setUrl] = useState(exercise.youtube_url || '')
+  const [descripcion, setDescripcion] = useState(exercise.descripcion || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const inputRef = useRef(null)
@@ -24,7 +25,8 @@ function YoutubeModal({ exercise, onSave, onClose }) {
     setSaving(true)
     try {
       const { data } = await api.patch(`/exercise-catalog/${exercise.id}`, {
-        youtube_url: trimmed || null
+        youtube_url: trimmed || null,
+        descripcion: descripcion.trim() || null
       })
       onSave(data)
     } catch (e) {
@@ -64,6 +66,18 @@ function YoutubeModal({ exercise, onSave, onClose }) {
             }}
           />
           {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 4 }}>{error}</p>}
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Descripción de la postura</label>
+          <textarea
+            className="input-field"
+            placeholder="Ej: Acostado en banco plano, agarrar la barra con agarre medio, bajar controlando hasta el pecho y empujar explosivo..."
+            value={descripcion}
+            onChange={e => setDescripcion(e.target.value)}
+            rows={3}
+            style={{ resize: 'vertical', minHeight: 70, fontFamily: 'inherit', fontSize: 13, lineHeight: 1.5 }}
+          />
         </div>
 
         {url && isValidYoutubeUrl(url.trim()) && url.trim() && (

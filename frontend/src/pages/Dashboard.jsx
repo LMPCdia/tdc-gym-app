@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api'
+import VideoModal from '../components/VideoModal'
 import './Dashboard.css'
 import './RoutineDetail.css'
 
@@ -115,7 +116,7 @@ function ConfirmDeleteRoutineModal({ nombre, onConfirm, onCancel }) {
   )
 }
 
-function AlumnoInlineRoutine({ detail, activeDay, setActiveDay, editingPeso, setEditingPeso, saving, setSaving, setDetail, urlMap }) {
+function AlumnoInlineRoutine({ detail, activeDay, setActiveDay, editingPeso, setEditingPeso, saving, setSaving, setDetail, setVideoModal }) {
   const currentDay = detail.dias[activeDay]
 
   const startEdit = (ws) => setEditingPeso({ wsId: ws.id, value: ws.peso != null ? String(ws.peso) : '' })
@@ -230,23 +231,18 @@ function AlumnoInlineRoutine({ detail, activeDay, setActiveDay, editingPeso, set
                     <tr key={ej.id} className="exercise-row">
                       <td className="cell-num">{idx + 1}</td>
                       <td className="cell-ejercicio">
-                        {(() => {
-                          const videoUrl = urlMap?.[ej.nombre.toLowerCase().trim()]
-                          return videoUrl ? (
-                            <a
-                              className="exercise-link"
-                              href={videoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Ver video en YouTube"
-                            >
-                              {ej.nombre}
-                              <svg className="yt-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
-                              </svg>
-                            </a>
-                          ) : ej.nombre
-                        })()}
+                        {ej.youtube_url ? (
+                          <button
+                            className="exercise-link exercise-link--btn"
+                            onClick={() => setVideoModal({ nombre: ej.nombre, url: ej.youtube_url, descripcion: ej.descripcion })}
+                            title="Ver video del ejercicio"
+                          >
+                            {ej.nombre}
+                            <svg className="yt-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
+                            </svg>
+                          </button>
+                        ) : ej.nombre}
                       </td>
                       {[1, 2, 3, 4].map(sem => {
                         const ws = semMap[sem]
@@ -335,7 +331,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null, nombre: '' })
-  const [urlMap, setUrlMap] = useState({})
 
   // Profesor: crear profesor panel
   const [showProfeForm, setShowProfeForm] = useState(false)
@@ -351,18 +346,10 @@ export default function Dashboard() {
   const [activeDay, setActiveDay] = useState(0)
   const [editingPeso, setEditingPeso] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [videoModal, setVideoModal] = useState(null)
 
   useEffect(() => {
     fetchRoutines()
-    api.get('/exercise-catalog')
-      .then(({ data }) => {
-        const map = {}
-        // Primero cargar entradas SIN url (para que las CON url las pisen)
-        data.forEach(e => { map[e.nombre.toLowerCase().trim()] = e.youtube_url || null })
-        data.forEach(e => { if (e.youtube_url) map[e.nombre.toLowerCase().trim()] = e.youtube_url })
-        setUrlMap(map)
-      })
-      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -583,7 +570,7 @@ export default function Dashboard() {
             saving={saving}
             setSaving={setSaving}
             setDetail={setDetail}
-            urlMap={urlMap}
+            setVideoModal={setVideoModal}
           />
         ) : (
           <div className="inline-empty">
@@ -595,6 +582,15 @@ export default function Dashboard() {
 
       {/* RIGHT: stats panel with real data */}
       <StatsPanel userId={user?.id} />
+
+      {videoModal && (
+        <VideoModal
+          nombre={videoModal.nombre}
+          descripcion={videoModal.descripcion}
+          videoUrl={videoModal.url}
+          onClose={() => setVideoModal(null)}
+        />
+      )}
     </div>
   )
 }
