@@ -55,7 +55,7 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/tdc-gym">
+    <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || '/tdc-gym'}>
       <AuthProvider>
         <AppLayout />
       </AuthProvider>
